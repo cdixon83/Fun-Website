@@ -1,121 +1,143 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+import { useRef, useState } from 'react'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [noPosition, setNoPosition] = useState(null)
+  const [saidYes, setSaidYes] = useState(false)
+  const answerAreaRef = useRef(null)
+  const yesButtonRef = useRef(null)
+
+  function moveNoButton(pointerX, pointerY) {
+    const area = answerAreaRef.current
+    const noButton = area?.querySelector('.no-button')
+    const yesButton = yesButtonRef.current
+
+    if (!area || !noButton || !yesButton) return
+
+    const areaBounds = area.getBoundingClientRect()
+    const yesBounds = yesButton.getBoundingClientRect()
+    const buttonWidth = noButton.offsetWidth
+    const buttonHeight = noButton.offsetHeight
+    const halfWidth = buttonWidth / 2
+    const halfHeight = buttonHeight / 2
+    const maxX = areaBounds.width - halfWidth
+    const maxY = areaBounds.height - halfHeight
+    const yesX = yesBounds.left - areaBounds.left + yesBounds.width / 2
+    const yesY = yesBounds.top - areaBounds.top + yesBounds.height / 2
+    const targetX = pointerX - areaBounds.left
+    const targetY = pointerY - areaBounds.top
+    let bestPosition = null
+    let bestDistance = -1
+
+    for (let attempt = 0; attempt < 30; attempt += 1) {
+      const x = halfWidth + Math.random() * (maxX - halfWidth)
+      const y = halfHeight + Math.random() * (maxY - halfHeight)
+      const overlapsYes =
+        Math.abs(x - yesX) < (buttonWidth + yesBounds.width) / 2 + 16 &&
+        Math.abs(y - yesY) < (buttonHeight + yesBounds.height) / 2 + 16
+
+      if (overlapsYes) continue
+
+      const distanceFromPointer = Math.hypot(x - targetX, y - targetY)
+      if (distanceFromPointer > bestDistance) {
+        bestDistance = distanceFromPointer
+        bestPosition = { x, y }
+      }
+    }
+
+    if (!bestPosition) {
+      bestPosition = { x: maxX, y: maxY }
+    }
+
+    setNoPosition(bestPosition)
+  }
+
+  function dodgePointer(event) {
+    event.preventDefault()
+    moveNoButton(event.clientX, event.clientY)
+  }
+
+  function dodgeClick(event) {
+    event.preventDefault()
+    const bounds = event.currentTarget.getBoundingClientRect()
+    moveNoButton(bounds.left + bounds.width / 2, bounds.top + bounds.height / 2)
+  }
+
+  function dodgeKeyboard(event) {
+    if (event.key !== 'Enter' && event.key !== ' ') return
+
+    event.preventDefault()
+    const bounds = event.currentTarget.getBoundingClientRect()
+    moveNoButton(bounds.left + bounds.width / 2, bounds.top + bounds.height / 2)
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <main className="page-shell">
+      <div className="sparkle sparkle-one" aria-hidden="true">✦</div>
+      <div className="sparkle sparkle-two" aria-hidden="true">✧</div>
+      <div className="sparkle sparkle-three" aria-hidden="true">✦</div>
 
-      <div className="ticks"></div>
+      <article className="question-card">
+        <div className="card-topline">
+          <span className="topline-star" aria-hidden="true">✦</span>
+          <span>A VERY IMPORTANT QUESTION</span>
+          <span className="topline-star" aria-hidden="true">✦</span>
+        </div>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
+        <div className="castle-mark" aria-hidden="true">
+          <svg viewBox="0 0 96 84" fill="none">
+            <path d="M17 72V40h12V25l8 7v9h8V18l8-12 8 12v23h8v-9l8-7v15h12v32H17Z" />
+            <path d="M42 72V53a6 6 0 0 1 12 0v19M23 51h8m34 0h8M48 20h1m17 26h1m-35 0h1" />
+            <path d="M11 72h74M8 78h80" />
           </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+        <p className="eyebrow">The weekend is calling...</p>
+        <h1>Should we go to <span>Disney</span> this weekend?</h1>
+        <p className="subtitle">A little magic sounds like a pretty good plan.</p>
+
+        {saidYes ? (
+          <div className="yes-response" role="status">
+            <span className="response-star" aria-hidden="true">✦</span>
+            <p>I knew you&apos;d say yes!</p>
+            <span className="response-caption">Let the magic begin.</span>
+          </div>
+        ) : (
+          <div className="answer-area" ref={answerAreaRef}>
+            <button
+              className="answer-button yes-button"
+              onClick={() => setSaidYes(true)}
+              ref={yesButtonRef}
+              type="button"
+            >
+              Yes
+              <span className="button-sparkle" aria-hidden="true">✦</span>
+            </button>
+            <button
+              className={`answer-button no-button${noPosition ? ' is-moving' : ''}`}
+              onClick={dodgeClick}
+              onKeyDown={dodgeKeyboard}
+              onPointerDown={dodgePointer}
+              onPointerEnter={dodgePointer}
+              style={
+                noPosition
+                  ? { left: `${noPosition.x}px`, top: `${noPosition.y}px` }
+                  : undefined
+              }
+              type="button"
+            >
+              We can&apos;t
+            </button>
+          </div>
+        )}
+
+        <div className="card-footer">
+          <span aria-hidden="true">✦</span>
+          <span>MAKE THIS WEEKEND MAGICAL</span>
+          <span aria-hidden="true">✦</span>
+        </div>
+      </article>
+    </main>
   )
 }
 
